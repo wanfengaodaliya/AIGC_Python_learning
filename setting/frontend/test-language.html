@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>语言切换测试</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 id="title">语言切换测试</h1>
+    <div class="mt-4">
+      <h2 id="subtitle">选择语言：</h2>
+      <div class="list-group">
+        <a href="#" class="list-group-item list-group-item-action language-option" data-lang="zh">
+          <div class="d-flex w-100 justify-content-between">
+            <h6 class="mb-1">简体中文</h6>
+            <span class="badge bg-primary">当前</span>
+          </div>
+        </a>
+        <a href="#" class="list-group-item list-group-item-action language-option" data-lang="en">
+          <div class="d-flex w-100 justify-content-between">
+            <h6 class="mb-1">English</h6>
+          </div>
+        </a>
+      </div>
+    </div>
+    <div class="mt-4">
+      <p id="test-text">这是一段测试文本，用于验证语言切换功能是否正常工作。</p>
+    </div>
+  </div>
+
+  <!-- 语言资源 -->
+  <script src="i18n.js"></script>
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- 测试脚本 -->
+  <script>
+    // 页面加载时更新文本
+    document.addEventListener('DOMContentLoaded', function() {
+      updatePageText();
+      
+      // 语言选择
+      const languageOptions = document.querySelectorAll('.language-option');
+      
+      languageOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // 移除所有活动状态
+          languageOptions.forEach(item => {
+            item.classList.remove('active');
+            item.querySelector('.badge')?.remove();
+          });
+          
+          // 添加当前活动状态
+          this.classList.add('active');
+          const lang = this.getAttribute('data-lang');
+          
+          // 添加当前标记
+          const badge = document.createElement('span');
+          badge.className = 'badge bg-primary';
+          badge.textContent = t('language.current', lang);
+          this.querySelector('.d-flex').appendChild(badge);
+          
+          // 切换语言
+          switchLanguage(lang);
+        });
+      });
+    });
+    
+    // 更新页面文本
+    function updatePageText() {
+      const lang = localStorage.getItem('language') || 'zh';
+      
+      // 更新标题
+      document.querySelector('title').textContent = lang === 'zh' ? '语言切换测试' : 'Language Switch Test';
+      document.querySelector('#title').textContent = lang === 'zh' ? '语言切换测试' : 'Language Switch Test';
+      document.querySelector('#subtitle').textContent = lang === 'zh' ? '选择语言：' : 'Select Language:';
+      document.querySelector('#test-text').textContent = lang === 'zh' ? '这是一段测试文本，用于验证语言切换功能是否正常工作。' : 'This is a test text to verify that the language switching function works correctly.';
+      
+      // 更新HTML lang属性
+      document.documentElement.lang = lang;
+    }
+    
+    // 模拟API调用
+    function updateLanguageSettings(lang) {
+      console.log('Language updated to:', lang);
+    }
+  </script>
+</body>
+</html>
