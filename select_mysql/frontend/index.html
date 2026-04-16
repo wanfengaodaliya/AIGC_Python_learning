@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>勇者职业选择</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .hero-container {
+            perspective: 1000px;
+        }
+        .hero-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .hero-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .hero-image {
+            position: relative;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e9ecef;
+            border-radius: 0.5rem;
+        }
+        .hero-icon {
+            font-size: 4rem;
+            transition: all 0.3s ease;
+        }
+        .hero-card:hover .hero-icon {
+            transform: scale(1.1);
+        }
+        .idle-animation {
+            animation: idle 2s ease-in-out infinite;
+        }
+        .attack-animation {
+            animation: attack 0.5s ease-out;
+        }
+        .hit-animation {
+            animation: hit 0.5s ease-out;
+        }
+        @keyframes idle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes attack {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(20px) scale(1.1); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes hit {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); background-color: rgba(255,0,0,0.2); }
+        }
+        .class-info {
+            margin-top: 1rem;
+        }
+        .btn-select {
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .status-bar {
+            background-color: #fff;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        @media (max-width: 768px) {
+            .hero-card {
+                margin-bottom: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4">勇者职业选择</h1>
+            <p class="lead">选择你的职业，开始冒险之旅</p>
+        </div>
+        
+        <div class="row g-4">
+            <!-- 变量巫师 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="hero-card card p-4">
+                    <div class="hero-image idle-animation">
+                        <div class="hero-icon" id="wizard-icon">🧙‍♂️</div>
+                    </div>
+                    <div class="class-info">
+                        <h3 class="text-center">变量巫师</h3>
+                        <p class="text-center text-muted">扁平化 2D 形象，手持代码法杖，攻击动效为简单的"法球飞行"。</p>
+                        <button class="btn btn-primary btn-select" onclick="selectClass('变量巫师', this)">选择职业</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 逻辑骑士 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="hero-card card p-4">
+                    <div class="hero-image idle-animation">
+                        <div class="hero-icon" id="knight-icon">🛡️</div>
+                    </div>
+                    <div class="class-info">
+                        <h3 class="text-center">逻辑骑士</h3>
+                        <p class="text-center text-muted">扁平化 2D 形象，背负逻辑之盾，攻击动效为简单的"盾牌冲撞"。</p>
+                        <button class="btn btn-primary btn-select" onclick="selectClass('逻辑骑士', this)">选择职业</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 循环射手 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="hero-card card p-4">
+                    <div class="hero-image idle-animation">
+                        <div class="hero-icon" id="archer-icon">🏹</div>
+                    </div>
+                    <div class="class-info">
+                        <h3 class="text-center">循环射手</h3>
+                        <p class="text-center text-muted">扁平化 2D 形象，手持循环长弓，攻击动效为连续的"箭矢连发"。</p>
+                        <button class="btn btn-primary btn-select" onclick="selectClass('循环射手', this)">选择职业</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-5 status-bar">
+            <h4 class="mb-3">状态信息</h4>
+            <div id="status-message" class="alert alert-info" role="alert">
+                请选择一个职业开始冒险
+            </div>
+            <div id="character-info" class="mt-3" style="display: none;">
+                <h5>角色信息</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div id="character-avatar" class="hero-icon"></div>
+                    </div>
+                    <div class="col-md-9">
+                        <p><strong>职业：</strong><span id="character-class"></span></p>
+                        <p><strong>等级：</strong>1</p>
+                        <p><strong>技能：</strong>基础 Python 技能</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function selectClass(className, button) {
+            // 播放攻击动画
+            const icon = button.closest('.hero-card').querySelector('.hero-icon');
+            icon.classList.add('attack-animation');
+            setTimeout(() => {
+                icon.classList.remove('attack-animation');
+            }, 500);
+            
+            // 发送请求到后端
+            fetch('http://localhost:8000/api/select-class', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({class_name: className})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    // 显示成功消息
+                    document.getElementById('status-message').className = 'alert alert-success';
+                    document.getElementById('status-message').textContent = data.message;
+                    
+                    // 显示角色信息
+                    document.getElementById('character-info').style.display = 'block';
+                    document.getElementById('character-class').textContent = className;
+                    
+                    // 设置角色头像
+                    const avatar = document.getElementById('character-avatar');
+                    if (className === '变量巫师') {
+                        avatar.textContent = '🧙‍♂️';
+                    } else if (className === '逻辑骑士') {
+                        avatar.textContent = '🛡️';
+                    } else if (className === '循环射手') {
+                        avatar.textContent = '🏹';
+                    }
+                    
+                    // 禁用所有选择按钮
+                    document.querySelectorAll('.btn-select').forEach(btn => {
+                        btn.disabled = true;
+                        btn.className = 'btn btn-secondary btn-select';
+                    });
+                    
+                    // 模拟受击反馈
+                    setTimeout(() => {
+                        icon.classList.add('hit-animation');
+                        setTimeout(() => {
+                            icon.classList.remove('hit-animation');
+                        }, 500);
+                    }, 1000);
+                }
+            })
+            .catch(error => {
+                document.getElementById('status-message').className = 'alert alert-danger';
+                document.getElementById('status-message').textContent = '选择职业失败，请重试';
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
