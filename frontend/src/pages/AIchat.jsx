@@ -1,443 +1,393 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react';
+import chathaita from './images/chathaita.png';
+import yonghu from './images/yonghu.png';
+import chatbeijing from './images/chatbeijing.png'; // 背景图
 
-function AIchat() {
-  const [currentSessionId, setCurrentSessionId] = useState(null)
-  const [sessions, setSessions] = useState([])
-  const [messages, setMessages] = useState([{ content: '你好！我是AI助手，有什么可以帮助你的吗？', isUser: false }])
-  const [history, setHistory] = useState([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const [typing, setTyping] = useState(false)
-  const [question, setQuestion] = useState('')
-  const [activeTab, setActiveTab] = useState('chat')
-  const [selectedSessionFilter, setSelectedSessionFilter] = useState('')
-  const chatBodyRef = useRef(null)
+const AIchat = () => {
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [messages, setMessages] = useState([
+    { content: "你好呀，我是小海獭，请问有什么可以帮助你的呢？", isUser: false },
+  ]);
+  const [history, setHistory] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [typing, setTyping] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [activeTab, setActiveTab] = useState("chat");
+  const [selectedSessionFilter, setSelectedSessionFilter] = useState("");
+  const chatBodyRef = useRef(null);
+  const pageSize = 10;
 
-  const pageSize = 10
-
-  // 初始化
+  // ====================== 后端接口 完全原封不动 ======================
   useEffect(() => {
-    loadSessions()
-    loadHistory()
-  }, [])
+    loadSessions();
+    loadHistory();
+  }, []);
 
-  // 加载会话列表
   const loadSessions = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/ai/sessions', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      })
-      if (!response.ok) {
-        throw new Error('获取会话列表失败')
-      }
-      const data = await response.json()
-      if (data.code === 200) {
-        setSessions(data.data.sessions)
-      }
+      const response = await fetch("http://localhost:8000/api/v1/ai/sessions", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!response.ok) throw new Error("获取会话列表失败");
+      const data = await response.json();
+      if (data.code === 200) setSessions(data.data.sessions);
     } catch (error) {
-      console.error('加载会话失败:', error)
+      console.error("加载会话失败:", error);
     }
-  }
+  };
 
-  // 加载历史记录
   const loadHistory = async () => {
     try {
-      const sessionId = selectedSessionFilter
-      const url = `http://localhost:8000/api/v1/ai/history?page=${currentPage}&page_size=${pageSize}${sessionId ? `&session_id=${sessionId}` : ''}`
+      const sessionId = selectedSessionFilter;
+      const url = `http://localhost:8000/api/v1/ai/history?page=${currentPage}&page_size=${pageSize}${
+        sessionId ? `&session_id=${sessionId}` : ""
+      }`;
       const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      })
-      if (!response.ok) {
-        throw new Error('获取历史记录失败')
-      }
-      const data = await response.json()
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!response.ok) throw new Error("获取历史记录失败");
+      const data = await response.json();
       if (data.code === 200) {
-        setHistory(data.data)
-        setTotalPages(Math.ceil(data.total / pageSize))
+        setHistory(data.data);
+        setTotalPages(Math.ceil(data.total / pageSize));
       }
     } catch (error) {
-      console.error('加载历史记录失败:', error)
+      console.error("加载历史记录失败:", error);
     }
-  }
+  };
 
-  // 加载会话历史
   const loadSessionHistory = async (sessionId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/ai/history?session_id=${sessionId}&page=1&page_size=100`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      const response = await fetch(
+        `http://localhost:8000/api/v1/ai/history?session_id=${sessionId}&page=1&page_size=100`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
         }
-      })
-      if (!response.ok) {
-        throw new Error('获取会话历史失败')
-      }
-      const data = await response.json()
+      );
+      if (!response.ok) throw new Error("获取会话历史失败");
+      const data = await response.json();
       if (data.code === 200) {
-        const records = data.data
-        const newMessages = []
-        records.reverse().forEach(record => {
-          newMessages.push({ content: record.question, isUser: true })
-          newMessages.push({ content: record.answer, isUser: false })
-        })
+        const records = data.data;
+        const newMessages = [];
+        records.reverse().forEach((record) => {
+          newMessages.push({ content: record.question, isUser: true });
+          newMessages.push({ content: record.answer, isUser: false });
+        });
         if (records.length === 0) {
-          newMessages.push({ content: '你好！我是AI助手，有什么可以帮助你的吗？', isUser: false })
+          newMessages.push({
+            content: "你好呀，我是小海獭，请问有什么可以帮助你的呢？",
+            isUser: false,
+          });
         }
-        setMessages(newMessages)
+        setMessages(newMessages);
       }
     } catch (error) {
-      console.error('加载会话历史失败:', error)
+      console.error("加载会话历史失败:", error);
     }
-  }
+  };
 
-  // 选择会话
   const selectSession = (sessionId) => {
-    setCurrentSessionId(sessionId)
-    loadSessionHistory(sessionId)
-  }
+    setCurrentSessionId(sessionId);
+    loadSessionHistory(sessionId);
+  };
 
-  // 创建新会话
   const createNewSession = () => {
-    setCurrentSessionId(null)
-    setMessages([{ content: '你好！我是AI助手，有什么可以帮助你的吗？', isUser: false }])
-  }
+    setCurrentSessionId(null);
+    setMessages([{ content: "你好呀，我是小海獭，请问有什么可以帮助你的呢？", isUser: false }]);
+  };
 
-  // 发送消息
   const sendMessage = async (e) => {
-    e.preventDefault()
-    if (!question.trim()) return
+    e.preventDefault();
+    if (!question.trim()) return;
 
-    // 添加用户消息
-    const newMessages = [...messages, { content: question, isUser: true }]
-    setMessages(newMessages)
-    setQuestion('')
-    setTyping(true)
+    const newMessages = [...messages, { content: question, isUser: true }];
+    setMessages(newMessages);
+    setQuestion("");
+    setTyping(true);
 
     try {
-      // 调用AI接口（流式响应）
-      const response = await fetch('http://localhost:8000/api/v1/ai/chat', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/api/v1/ai/chat", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify({
-          question: question,
-          stream: true,
-          session_id: currentSessionId
-        })
-      })
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        body: JSON.stringify({ question, stream: true, session_id: currentSessionId }),
+      });
 
-      if (!response.ok) {
-        throw new Error('API请求失败')
-      }
+      if (!response.ok) throw new Error("API请求失败");
 
-      // 处理流式响应
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let fullAnswer = ''
-      let sessionIdFromResponse = currentSessionId
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullAnswer = "";
+      let sessionIdFromResponse = currentSessionId;
+      setTyping(false);
 
-      setTyping(false)
-
-      // 读取响应流
       while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
-
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.substring(6)
+          if (line.startsWith("data: ")) {
+            const data = line.substring(6);
             if (data) {
               try {
-                const json = JSON.parse(data)
+                const json = JSON.parse(data);
                 if (json.content) {
-                  if (json.content === '[END]') {
-                    // 结束标记
-                    break
-                  } else {
-                    fullAnswer += json.content
-                    setMessages(prev => [...prev.slice(0, -1), { content: fullAnswer, isUser: false }])
-                  }
+                  if (json.content === "[END]") break;
+                  fullAnswer += json.content;
+                  setMessages((prev) => [...prev.slice(0, -1), { content: fullAnswer, isUser: false }]);
                 }
-                if (json.session_id) {
-                  sessionIdFromResponse = json.session_id
-                }
+                if (json.session_id) sessionIdFromResponse = json.session_id;
               } catch (e) {
-                console.error('解析JSON失败:', e)
+                console.error("解析JSON失败:", e);
               }
             }
           }
         }
       }
 
-      // 更新当前会话ID
       if (!currentSessionId && sessionIdFromResponse) {
-        setCurrentSessionId(sessionIdFromResponse)
-        loadSessions() // 重新加载会话列表
+        setCurrentSessionId(sessionIdFromResponse);
+        loadSessions();
       }
-
     } catch (error) {
-      console.error('错误:', error)
-      setTyping(false)
-      setMessages(prev => [...prev, { content: '抱歉，AI服务暂时不可用，请稍后再试。', isUser: false }])
+      console.error("错误:", error);
+      setTyping(false);
+      setMessages((prev) => [
+        ...prev,
+        { content: "抱歉，AI服务暂时不可用，请稍后再试。", isUser: false },
+      ]);
     }
-  }
+  };
 
-  // 删除历史记录
   const deleteHistoryRecord = async (recordId) => {
-    if (!window.confirm('确定要删除这条记录吗？')) {
-      return
-    }
-
+    if (!window.confirm("确定要删除这条记录吗？")) return;
     try {
       const response = await fetch(`http://localhost:8000/api/v1/ai/history/${recordId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      })
-      if (!response.ok) {
-        throw new Error('删除记录失败')
-      }
-      const data = await response.json()
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!response.ok) throw new Error("删除记录失败");
+      const data = await response.json();
       if (data.code === 200) {
-        loadHistory()
-        loadSessions()
+        loadHistory();
+        loadSessions();
       }
     } catch (error) {
-      console.error('删除历史记录失败:', error)
+      console.error("删除历史记录失败:", error);
     }
-  }
+  };
 
-  // 格式化日期时间
   const formatDateTime = (dateTimeString) => {
-    const date = new Date(dateTimeString)
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+    const date = new Date(dateTimeString);
+    return date.toLocaleString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
-  // 滚动到聊天底部
   useEffect(() => {
-    if (chatBodyRef.current) {
-      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight
-    }
-  }, [messages, typing])
+    if (chatBodyRef.current) chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+  }, [messages, typing]);
 
+  // ====================== 渲染界面 ======================
   return (
-    <div className="app-container d-flex h-100">
-      {/* 侧边栏 - 会话列表 */}
-      <div className="sidebar bg-white border-right" style={{ width: '320px' }}>
-        <div className="sidebar-header bg-primary text-white p-4">
-          <h3>会话列表</h3>
-        </div>
-        <div className="sessions-list p-4" style={{ height: 'calc(100vh - 160px)', overflowY: 'auto' }}>
-          {sessions.map(session => (
-            <div 
-              key={session.session_id}
-              className={`session-item p-4 rounded-lg mb-2 cursor-pointer ${currentSessionId === session.session_id ? 'bg-primary bg-opacity-10 border border-primary' : ''}`}
-              onClick={() => selectSession(session.session_id)}
-            >
-              <div className="session-title font-medium">会话 {session.session_id.substring(0, 8)}...</div>
-              <div className="session-time text-sm text-muted mt-2">{formatDateTime(session.last_message_time)}</div>
-            </div>
-          ))}
-        </div>
-        <button 
-          className="btn btn-primary new-chat-btn w-100 m-4"
-          onClick={createNewSession}
-        >
-          新建对话
-        </button>
-      </div>
-
-      {/* 主内容区 */}
-      <div className="main-content flex-grow-1">
-        {/* 标签页导航 */}
-        <ul className="nav nav-tabs">
+    // 根容器改为全宽全高，无左侧边栏
+    <div style={{ width: "100%", height: "100%", margin: 0, overflow: "hidden", padding: 0 }}>
+      {/* 右侧区域（现在是整个屏幕） */}
+      <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", overflow: "hidden" }}>
+        <ul className="nav nav-tabs" style={{ margin: 0, padding: 0, borderBottom: 0 }}>
           <li className="nav-item">
-            <a 
-              className={`nav-link ${activeTab === 'chat' ? 'active' : ''}`} 
-              href="#" 
-              onClick={(e) => {
-                e.preventDefault()
-                setActiveTab('chat')
-              }}
+            <a
+              className={`nav-link ${activeTab === "chat" ? "active" : ""}`}
+              href="#"
+              onClick={(e) => { e.preventDefault(); setActiveTab("chat"); }}
+              style={{ padding: "8px 16px" }}
             >
               对话
             </a>
           </li>
           <li className="nav-item">
-            <a 
-              className={`nav-link ${activeTab === 'history' ? 'active' : ''}`} 
-              href="#" 
-              onClick={(e) => {
-                e.preventDefault()
-                setActiveTab('history')
-              }}
+            <a
+              className={`nav-link ${activeTab === "history" ? "active" : ""}`}
+              href="#"
+              onClick={(e) => { e.preventDefault(); setActiveTab("history"); }}
+              style={{ padding: "8px 16px" }}
             >
               历史记录
             </a>
           </li>
         </ul>
 
-        {/* 标签页内容 */}
-        <div className="tab-content">
-          {/* 对话标签页 */}
-          {activeTab === 'chat' && (
-            <div className="tab-pane active">
-              <div className="chat-container h-100">
-                <div className="chat-header bg-primary text-white p-4">
-                  <h2>AI对话系统</h2>
-                  <div className="header-actions">
-                    <span id="current-session-id" className="bg-white bg-opacity-20 px-3 py-1 rounded">
-                      {currentSessionId ? `会话 ${currentSessionId.substring(0, 8)}...` : '新会话'}
-                    </span>
-                  </div>
-                </div>
-                <div 
-                  className="chat-body p-4" 
-                  style={{ height: 'calc(100vh - 200px)', overflowY: 'auto', backgroundColor: '#f8fafc' }}
-                  ref={chatBodyRef}
+        {/* 对话页面：背景铺满无留白 */}
+        {activeTab === "chat" && (
+          <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+            <div
+              ref={chatBodyRef}
+              style={{
+                flex: 1,
+                backgroundImage: `url(${chatbeijing})`,
+                backgroundSize: "cover",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center 90%",
+                padding: "16px",
+                overflowY: "auto",
+              }}
+            >
+              {messages.map((msg, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    justifyContent: msg.isUser ? "flex-end" : "flex-start",
+                    marginBottom: "12px",
+                    alignItems: "flex-start",
+                    gap: "8px",
+                  }}
                 >
-                  {messages.map((message, index) => (
-                    <div 
-                      key={index} 
-                      className={`message ${message.isUser ? 'user-message' : 'ai-message'} p-4 rounded-lg mb-3 ${message.isUser ? 'ml-auto' : 'mr-auto'} max-w-3/4`}
+                  {!msg.isUser && (
+                    <img
+                      src={chathaita}
+                      alt="小海獭"
                       style={{
-                        backgroundColor: message.isUser ? '#3b82f6' : '#ffffff',
-                        color: message.isUser ? '#ffffff' : '#1f2937',
-                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                        width: "44px",
+                        height: "44px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        objectPosition: "center",
                       }}
-                    >
-                      <p>{message.content}</p>
-                    </div>
-                  ))}
-                  {typing && (
-                    <div className="message ai-message p-4 rounded-lg mb-3 mr-auto max-w-3/4" style={{ backgroundColor: '#ffffff', color: '#1f2937', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}>
-                      <div className="typing-indicator">
-                        <div className="dot" style={{ width: '10px', height: '10px', backgroundColor: '#3b82f6', borderRadius: '50%', display: 'inline-block', margin: '0 2px', animation: 'typing 1.4s infinite ease-in-out' }}></div>
-                        <div className="dot" style={{ width: '10px', height: '10px', backgroundColor: '#3b82f6', borderRadius: '50%', display: 'inline-block', margin: '0 2px', animation: 'typing 1.4s infinite ease-in-out 0.16s' }}></div>
-                        <div className="dot" style={{ width: '10px', height: '10px', backgroundColor: '#3b82f6', borderRadius: '50%', display: 'inline-block', margin: '0 2px', animation: 'typing 1.4s infinite ease-in-out 0.32s' }}></div>
-                      </div>
-                    </div>
+                    />
+                  )}
+                  <div
+                    style={{
+                      maxWidth: "70%",
+                      padding: "12px 16px",
+                      borderRadius: msg.isUser ? "16px 4px 16px 16px" : "4px 16px 16px 16px",
+                      backgroundColor: msg.isUser ? "#409EFF" : "#fff",
+                      color: msg.isUser ? "#fff" : "#333",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                      fontSize: "15px",
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {msg.content}
+                  </div>
+                  {msg.isUser && (
+                    <img
+                      src={yonghu}
+                      alt="用户"
+                      style={{
+                        width: "44px",
+                        height: "44px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        objectPosition: "center",
+                      }}
+                    />
                   )}
                 </div>
-                <div className="chat-footer p-4 border-top">
-                  <form onSubmit={sendMessage} className="d-flex gap-2">
-                    <input 
-                      type="text" 
-                      className="form-control flex-grow-1 rounded-full p-3" 
-                      placeholder="请输入你的问题..."
-                      value={question}
-                      onChange={(e) => setQuestion(e.target.value)}
-                      required
-                    />
-                    <button type="submit" className="btn btn-primary rounded-full px-6">发送</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 历史记录标签页 */}
-          {activeTab === 'history' && (
-            <div className="tab-pane active">
-              <div className="history-container h-100">
-                <div className="history-header p-4 border-bottom bg-light">
-                  <h3>历史记录</h3>
-                  <div className="header-actions">
-                    <select 
-                      className="form-select form-select-sm" 
-                      value={selectedSessionFilter}
-                      onChange={(e) => {
-                        setSelectedSessionFilter(e.target.value)
-                        setCurrentPage(1)
-                        loadHistory()
-                      }}
-                    >
-                      <option value="">所有会话</option>
-                      {sessions.map(session => (
-                        <option key={session.session_id} value={session.session_id}>
-                          会话 {session.session_id.substring(0, 8)}...
-                        </option>
-                      ))}
-                    </select>
+              ))}
+              {typing && (
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginBottom: "12px" }}>
+                  <img
+                    src={chathaita}
+                    alt="小海獭"
+                    style={{
+                      width: "44px",
+                      height: "44px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      objectPosition: "center",
+                    }}
+                  />
+                  <div style={{ background: "#fff", padding: "12px 18px", borderRadius: "4px 16px 16px 16px" }}>
+                    <span style={{ display: "inline-block", width: "8px", height: "8px", background: "#ccc", borderRadius: "50%", margin: "0 2px", animation: "typing 1.4s infinite ease-in-out" }}></span>
+                    <span style={{ display: "inline-block", width: "8px", height: "8px", background: "#ccc", borderRadius: "50%", margin: "0 2px", animation: "typing 1.4s infinite ease-in-out 0.16s" }}></span>
+                    <span style={{ display: "inline-block", width: "8px", height: "8px", background: "#ccc", borderRadius: "50%", margin: "0 2px", animation: "typing 1.4s infinite ease-in-out 0.32s" }}></span>
                   </div>
                 </div>
-                <div 
-                  className="history-body p-4" 
-                  style={{ height: 'calc(100vh - 200px)', overflowY: 'auto', backgroundColor: '#f8fafc' }}
-                >
-                  {history.map(record => (
-                    <div key={record.record_id} className="history-item p-4 rounded-lg mb-3 bg-white border shadow-sm">
-                      <div className="history-question font-semibold mb-3">{record.question}</div>
-                      <div className="history-answer text-muted mb-3">{record.answer}</div>
-                      <div className="history-meta text-sm text-muted pt-3 border-top d-flex justify-content-between">
-                        <span>{formatDateTime(record.response_time)}</span>
-                        <button 
-                          className="btn btn-danger btn-sm" 
-                          onClick={() => deleteHistoryRecord(record.record_id)}
-                        >
-                          删除
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="pagination p-4 border-top d-flex justify-content-center gap-2">
-                  <button 
-                    className="btn btn-outline-secondary" 
-                    disabled={currentPage === 1}
-                    onClick={() => {
-                      setCurrentPage(prev => prev - 1)
-                      loadHistory()
-                    }}
-                  >
-                    上一页
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button 
-                      key={page}
-                      className={`btn ${page === currentPage ? 'btn-primary' : 'btn-outline-secondary'}`}
-                      onClick={() => {
-                        setCurrentPage(page)
-                        loadHistory()
-                      }}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button 
-                    className="btn btn-outline-secondary" 
-                    disabled={currentPage === totalPages}
-                    onClick={() => {
-                      setCurrentPage(prev => prev + 1)
-                      loadHistory()
-                    }}
-                  >
-                    下一页
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
-          )}
-        </div>
+
+            {/* 底部输入框 */}
+            <div
+              style={{
+                padding: "12px 16px",
+                background: "#fff",
+                borderTop: "1px solid #eee",
+                display: "flex",
+                gap: "10px",
+                alignItems: "center",
+              }}
+            >
+              <form onSubmit={sendMessage} style={{ flex: 1, display: "flex", gap: "10px" }}>
+                <input
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="请输入消息..."
+                  style={{ flex: 1, borderRadius: "24px", padding: "10px 16px", border: "1px solid #ddd", outline: "none" }}
+                />
+                <button
+                  type="submit"
+                  style={{ borderRadius: "24px", padding: "0 20px", background: "#409EFF", color: "#fff", border: "none" }}
+                >
+                  发送
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* 历史记录：背景铺满无留白 */}
+        {activeTab === "history" && (
+          <div
+            className="p-4 d-flex flex-column"
+            style={{
+              flex: 1,
+              backgroundImage: `url(${chatbeijing})`,
+              backgroundSize: "cover",
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "center bottom",
+              overflowY: "auto",
+            }}
+          >
+            <div className="mb-3 d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">历史记录</h5>
+              <select className="form-select form-select-sm w-auto" value={selectedSessionFilter} onChange={e => { setSelectedSessionFilter(e.target.value); setCurrentPage(1); loadHistory() }}>
+                <option value="">所有会话</option>
+                {sessions.map(s => <option key={s.session_id} value={s.session_id}>会话 {s.session_id.substring(0, 8)}...</option>)}
+              </select>
+            </div>
+            <div className="flex-grow-1 overflow-auto">
+              {history.map((record) => (
+                <div key={record.record_id} className="p-3 bg-white bg-opacity-90 rounded border shadow-sm mb-3">
+                  <div className="fw-medium mb-2">{record.question}</div>
+                  <div className="text-muted mb-2">{record.answer}</div>
+                  <div className="d-flex justify-content-between align-items-center small text-muted pt-2 border-top">
+                    <span>{formatDateTime(record.response_time)}</span>
+                    <button className="btn btn-danger btn-sm" onClick={() => deleteHistoryRecord(record.record_id)}>删除</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 d-flex justify-content-center gap-2">
+              <button className="btn btn-outline-secondary btn-sm" disabled={currentPage === 1} onClick={() => { setCurrentPage(p => p - 1); loadHistory() }}>上一页</button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                <button key={p} className={`btn btn-sm ${p === currentPage ? "btn-primary" : "btn-outline-secondary"}`} onClick={() => { setCurrentPage(p); loadHistory() }}>{p}</button>
+              ))}
+              <button className="btn btn-outline-secondary btn-sm" disabled={currentPage === totalPages} onClick={() => { setCurrentPage(p => p + 1); loadHistory() }}>下一页</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AIchat
+export default AIchat;
