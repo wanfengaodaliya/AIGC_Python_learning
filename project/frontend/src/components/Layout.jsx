@@ -35,14 +35,9 @@ function Layout() {
         </div>
       </div>
 
-      {/* 主内容区 */}
-      <div className="flex-grow-1" style={{ marginLeft: '250px', minHeight: '100vh' }}>
-        <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-          <div className="container-fluid">
-            <h1 className="navbar-brand mb-0">AIGC 应用</h1>
-          </div>
-        </nav>
-        <div className="container py-4">
+      {/* 主内容区 - 已删除顶部 AIGC 应用框 */}
+      <div className="flex-grow-1 d-flex flex-column" style={{ marginLeft: '250px', height: '100vh', overflow: 'hidden' }}>
+        <div className="container py-4 flex-grow-1 d-flex flex-column overflow-hidden">
           <Outlet />
         </div>
       </div>
