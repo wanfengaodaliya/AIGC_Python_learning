@@ -38,10 +38,9 @@ const AIchat = () => {
     }
   };
 
-  const loadHistory = async () => {
+  const loadHistory = async (page = currentPage, sessionId = selectedSessionFilter) => {
     try {
-      const sessionId = selectedSessionFilter;
-      const url = `http://localhost:8000/api/v1/ai/history?page=${currentPage}&page_size=${pageSize}${
+      const url = `http://localhost:8000/api/v1/ai/history?page=${page}&page_size=${pageSize}${
         sessionId ? `&session_id=${sessionId}` : ""
       }`;
       const response = await fetch(url, {
@@ -102,7 +101,7 @@ const AIchat = () => {
     e.preventDefault();
     if (!question.trim()) return;
 
-    const newMessages = [...messages, { content: question, isUser: true }];
+    const newMessages = [...messages, { content: question, isUser: true }, { content: "", isUser: false }];
     setMessages(newMessages);
     setQuestion("");
     setTyping(true);
@@ -122,7 +121,6 @@ const AIchat = () => {
       const decoder = new TextDecoder();
       let fullAnswer = "";
       let sessionIdFromResponse = currentSessionId;
-      setTyping(false);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -138,6 +136,7 @@ const AIchat = () => {
                 if (json.content) {
                   if (json.content === "[END]") break;
                   fullAnswer += json.content;
+                  setTyping(false);
                   setMessages((prev) => [...prev.slice(0, -1), { content: fullAnswer, isUser: false }]);
                 }
                 if (json.session_id) sessionIdFromResponse = json.session_id;
@@ -156,10 +155,7 @@ const AIchat = () => {
     } catch (error) {
       console.error("错误:", error);
       setTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        { content: "抱歉，AI服务暂时不可用，请稍后再试。", isUser: false },
-      ]);
+      setMessages((prev) => [...prev.slice(0, -1), { content: "抱歉，AI服务暂时不可用，请稍后再试。", isUser: false }]);
     }
   };
 
@@ -359,7 +355,7 @@ const AIchat = () => {
           >
             <div className="mb-3 d-flex justify-content-between align-items-center">
               <h5 className="mb-0">历史记录</h5>
-              <select className="form-select form-select-sm w-auto" value={selectedSessionFilter} onChange={e => { setSelectedSessionFilter(e.target.value); setCurrentPage(1); loadHistory() }}>
+              <select className="form-select form-select-sm w-auto" value={selectedSessionFilter} onChange={e => { setSelectedSessionFilter(e.target.value); setCurrentPage(1); loadHistory(1, e.target.value); }}>
                 <option value="">所有会话</option>
                 {sessions.map(s => <option key={s.session_id} value={s.session_id}>会话 {s.session_id.substring(0, 8)}...</option>)}
               </select>
@@ -377,11 +373,11 @@ const AIchat = () => {
               ))}
             </div>
             <div className="mt-3 d-flex justify-content-center gap-2">
-              <button className="btn btn-outline-secondary btn-sm" disabled={currentPage === 1} onClick={() => { setCurrentPage(p => p - 1); loadHistory() }}>上一页</button>
+              <button className="btn btn-outline-secondary btn-sm" disabled={currentPage === 1} onClick={() => { setCurrentPage(p => p - 1); loadHistory(currentPage - 1); }}>上一页</button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                <button key={p} className={`btn btn-sm ${p === currentPage ? "btn-primary" : "btn-outline-secondary"}`} onClick={() => { setCurrentPage(p); loadHistory() }}>{p}</button>
+                <button key={p} className={`btn btn-sm ${p === currentPage ? "btn-primary" : "btn-outline-secondary"}`} onClick={() => { setCurrentPage(p); loadHistory(p); }}>{p}</button>
               ))}
-              <button className="btn btn-outline-secondary btn-sm" disabled={currentPage === totalPages} onClick={() => { setCurrentPage(p => p + 1); loadHistory() }}>下一页</button>
+              <button className="btn btn-outline-secondary btn-sm" disabled={currentPage === totalPages} onClick={() => { setCurrentPage(p => p + 1); loadHistory(currentPage + 1); }}>下一页</button>
             </div>
           </div>
         )}
