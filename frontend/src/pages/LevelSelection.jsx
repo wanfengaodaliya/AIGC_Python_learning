@@ -2,7 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import yunduo from './images/yunduo.png'
 import xingxing from './images/xingxing.png'
-import chathaita from './images/chathaita.png'
+import selecthaita from './images/selecthaita.png'
 
 const levels = [
   { id: 1, name: '初识小海獭', icon: '🦦', color: '#27c93f', status: 'completed', x: 55, y: 100 },
@@ -40,7 +40,7 @@ function LevelSelection() {
       <div className="otter-side"
         onClick={() => navigate('/app/ai-chat')}>
         <div className="otter-bubble">有问题问我哦</div>
-        <img src={chathaita} alt="海獭" />
+        <img src={selecthaita} alt="海獭" />
       </div>
 
       {/* Level circles container - centered */}
@@ -67,13 +67,23 @@ function LevelSelection() {
             style={{ left: `${level.x}px`, top: `${level.y}px` }}
             onClick={() => handleCircleClick(level)}
           >
-            {level.status === 'current' && <div className="current-arrow">▲</div>}
+            {/* 外圈效果：仅对已通关/当前关卡显示 */}
+            {(level.status === 'completed' || level.status === 'current') && (
+              <div className="level-ring" style={{ borderColor: level.color }} />
+            )}
+            
+            {/* 按钮本体 */}
+            <div className={`level-button ${level.status}`}>
+              {level.status === 'completed' || level.status === 'current' ? (
+                <span className="star-icon">★</span>
+              ) : (
+                <span className="lock-icon">🔒</span>
+              )}
+            </div>
+
+            {/* 状态标记 */}
             {level.status === 'completed' && <div className="check-mark">✓</div>}
-            <span className="level-icon">{level.icon}</span>
-            <span className="level-name">{level.name}</span>
-            <span className="level-label">
-              {level.status === 'completed' ? '已通关' : level.status === 'current' ? '当前关卡' : '未解锁'}
-            </span>
+            {level.status === 'current' && <div className="current-arrow">▲</div>}
           </div>
         ))}
       </div>
