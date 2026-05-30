@@ -332,42 +332,17 @@ body.eye-protection {
   pointer-events: none;
 }
 
-/* 圆形关卡按钮 */
+/* 关卡按钮容器 - 只用定位，不设形状 */
 .level-circle {
   position: absolute;
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
   z-index: 2;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.level-circle:hover {
-  transform: scale(1.08);
-}
-
-.level-circle.completed {
-  background: #27c93f;
-  color: #fff;
-  box-shadow: 0 0 16px rgba(39, 201, 63, 0.5);
-}
-
-.level-circle.current {
-  background: #4A90E2;
-  color: #fff;
-  animation: pulse 2s infinite;
 }
 
 .level-circle.locked {
-  background: #e0e0e0;
-  border: 2px dashed #999;
-  color: #999;
   cursor: not-allowed;
 }
 
@@ -389,8 +364,10 @@ body.eye-protection {
 
 .otter-side img {
   height: 100%;
-  width: auto;
-  object-fit: contain;
+  aspect-ratio: 1;
+  object-fit: cover;
+  object-position: center 20%;
+  border-radius: 50%;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
 }
 
@@ -421,23 +398,41 @@ body.eye-protection {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  padding: 20px;
+  padding: 50px 20px 20px;
+  align-items: flex-start;
 }
 
 .level-detail-card {
+  position: relative;
   width: 100%;
   max-width: 600px;
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(74, 144, 226, 0.2);
-  overflow: hidden;
+  background: linear-gradient(135deg, #6CB4EE 0%, #ADD8E6 100%);
+  border-radius: 4px;
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.06),
+    0 6px 24px rgba(0,0,0,0.04);
+  overflow: visible;
   display: flex;
   flex-direction: column;
+  transform: rotate(-1.2deg);
+}
+
+.level-detail-card::before {
+  content: '';
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-0.5deg);
+  width: 90px;
+  height: 28px;
+  background: rgba(200, 195, 185, 0.35);
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  pointer-events: none;
 }
 
 /* 题目描述区 */
 .problem-section {
-  background: linear-gradient(135deg, #4A90E2 0%, #6BB3F5 100%);
   padding: 24px 20px;
   text-align: center;
   color: #fff;
@@ -494,7 +489,7 @@ body.eye-protection {
 }
 
 .code-header-bar {
-  background: #f0f0f0;
+  background: #c5dff0;
   border-radius: 8px 8px 0 0;
   padding: 8px 12px;
   display: flex;
@@ -513,14 +508,14 @@ body.eye-protection {
 .code-dot.green { background: #27c93f; }
 
 .code-editor-box {
-  background: #2d2d2d;
+  background: #eaf4fa;
   border-radius: 0 0 8px 8px;
   display: flex;
   min-height: 120px;
 }
 
 .code-line-numbers {
-  background: #1e1e1e;
+  background: #dce8f2;
   padding: 12px 8px;
   text-align: right;
   user-select: none;
@@ -528,7 +523,7 @@ body.eye-protection {
   font-family: 'Consolas', 'Monaco', monospace;
   font-size: 14px;
   line-height: 22px;
-  color: #858585;
+  color: #7a9aaa;
 }
 
 .code-textarea {
@@ -536,7 +531,7 @@ body.eye-protection {
   background: transparent;
   border: none;
   outline: none;
-  color: #d4d4d4;
+  color: #1a334a;
   font-family: 'Consolas', 'Monaco', monospace;
   font-size: 14px;
   line-height: 22px;
@@ -546,7 +541,7 @@ body.eye-protection {
 }
 
 .code-textarea::placeholder {
-  color: #5a5a5a;
+  color: #8aaabc;
 }
 
 /* 输出区 */
@@ -782,12 +777,108 @@ body.eye-protection {
   background: rgba(255,255,255,0.4);
 }
 
+.level-circle {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.level-ring {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 100px;
+  height: 100px;
+  border: 4px solid;
+  border-radius: 20px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.level-button {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 30px;
+  position: relative;
+  z-index: 1;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.level-button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.level-button:active {
+  transform: translateY(2px);
+}
+
+.level-button.completed {
+  background: linear-gradient(180deg, #3ddb54 0%, #20a835 100%);
+  box-shadow:
+    0 4px 0 #1a8a2c,
+    0 6px 12px rgba(32, 168, 53, 0.35);
+}
+
+.level-button.current {
+  background: linear-gradient(180deg, #5DA5E8 0%, #3B7BC8 100%);
+  box-shadow:
+    0 4px 0 #2d63a0,
+    0 6px 12px rgba(59, 123, 200, 0.35);
+}
+
+.level-button.locked {
+  background: linear-gradient(180deg, #e0e0e0 0%, #c0c0c0 100%);
+  box-shadow:
+    0 4px 0 #a0a0a0,
+    0 6px 12px rgba(0,0,0,0.1);
+  cursor: not-allowed;
+}
+
+.star-icon {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.lock-icon {
+  font-size: 20px;
+}
+
+.check-mark {
+  position: absolute;
+  top: -5px;
+  right: 5px;
+  background: white;
+  color: #27c93f;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 2;
+}
+
+.current-arrow {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #4A90E2;
+  font-size: 16px;
+  z-index: 2;
+}
+
 /* 关卡辅助样式 */
-.level-icon { font-size: 28px; line-height: 1; }
-.level-name { font-size: 11px; font-weight: 600; margin-top: 2px; }
-.level-label { font-size: 9px; opacity: 0.8; }
-.check-mark { position: absolute; top: -4px; right: -4px; background: #fff; color: #27c93f; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
-.current-arrow { position: absolute; top: -16px; color: #4A90E2; font-size: 14px; animation: bounce 1s infinite; }
 .otter-bubble { background: #fff; padding: 6px 12px; border-radius: 12px; font-size: 12px; margin-bottom: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
